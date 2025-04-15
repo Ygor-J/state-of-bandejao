@@ -1,16 +1,18 @@
 from bs4 import BeautifulSoup
 import bs4
 import requests
-import sys
 import dotenv
 import pandas as pd
 import os
-import json
+import logging
+import datetime
 import pprint
+import google.cloud.storage as storage
 
 dotenv.load_dotenv()
 
 URL = os.environ['URL']
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'sa.json'
 
 def get_meal_type(soup: bs4.element.Tag) -> str:
     return soup.find('h2').text.strip()
@@ -20,55 +22,42 @@ def get_menu_item_name(soup: bs4.element.Tag) -> str:
 
 def get_menu_item_details(soup: bs4.element.Tag) -> str:
     description = soup.find('div', class_='menu-item-description').text.strip()
-    description_lines = description.split('\n')
-
-    new_description_lines = list()
-
-    for i, line in enumerate(description_lines):
-        line_strip = line.strip()
-        if line_strip != '':
-            new_description_lines.append(line_strip)
-
-    menu_description = list()
-
-    index = 0
-
-    for i, element in enumerate(new_description_lines):
-        if "Observa" in element:
-            index = i
-            break
-        else:
-            menu_description.append(element)
-    
-
-    return (menu_description, new_description_lines[index:])
+    return description.replace('\r', '').replace('\n', '')
 
 def extract_data():
-    #response = requests.get(URL)
-    #if response.status_code != 200:
-        # Send to my email telling me something went wrong
-        # But for now, just raise exception
-    #    raise requests.exceptions.RequestException
-
-    with open('html_web.txt', 'r') as f:
-        html_file = f.read()
+    response = requests.get(URL)
+    if response.status_code != 200:
+        raise requests.exceptions.RequestException
     
-    soup = BeautifulSoup(html_file, 'html.parser')
+    soup = BeautifulSoup(response.text, 'html.parser')
     
     menus = soup.find_all('div', class_='menu-section')
 
-    data = {'meal_type': list(), 'menu_item_name': [], 'menu_description': [], 'menu_obs': []}
+    data = {'extraction_date': [], 'meal_type': list(), 'menu_item_name': [], 'menu_description': []}
 
     for menu in menus:
+        data['extraction_date'].append(datetime.datetime.now().isoformat())
+
         data['meal_type'].append(get_meal_type(menu))
         data['menu_item_name'].append(get_menu_item_name(menu))
         
-        menu_details = get_menu_item_details(menu)
-        data['menu_description'].append('|'.join(menu_details[0]))
-        data['menu_obs'].append('|'.join(menu_details[1]))
+        data['menu_description'].append(get_menu_item_details(menu))
 
     return data
 
+def send_data_to_bucket(data: dict):
+    BUCKET = os.environ['BUCKET']
+    storage_client = storage.Client(project=os.environ['PROJECT_ID']).from_service_account_json(os.environ['GOOGLE_APPLICATION_CREDENTIALS'])
+
+    date = datetime.datetime.now().strftime('%Y-%m-%d')
+
+    blob_name = f'menu-{date}'
+    folder_name = 'state-of-bandejao'
+
+    blob = storage_client.bucket(BUCKET).blob(folder_name + '/' + blob_name)
+    blob.upload_from_string(str(data), content_type='text/plain; charset=utf-8')
+    logging.info(f"Blob {blob_name} was uploaed to bucket {BUCKET}/{folder_name}/")
 
 if __name__ == '__main__':
-    pprint.pp(extract_data())
+    data = extract_data()
+    send_data_to_bucket(data)
