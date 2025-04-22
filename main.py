@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 import bs4
 import requests
-import dotenv
+#import dotenv
 import pandas as pd
 import os
 import logging
@@ -9,10 +9,14 @@ import datetime
 import pprint
 import google.cloud.storage as storage
 
-dotenv.load_dotenv()
+#dotenv.load_dotenv()
 
-URL = os.environ['URL']
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'sa.json'
+#os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'sa.json'
+
+URL='https://sistemas.prefeitura.unicamp.br/apps/cardapio/index.php'
+BUCKET='tidy-amplifier-455423-u0'
+PROJECT_ID='tidy-amplifier-455423-u0'
+GOOGLE_APPLICATION_CREDENTIALS='sa.json'
 
 def get_meal_type(soup: bs4.element.Tag) -> str:
     return soup.find('h2').text.strip()
@@ -46,8 +50,7 @@ def extract_data():
     return data
 
 def send_data_to_bucket(data: dict):
-    BUCKET = os.environ['BUCKET']
-    storage_client = storage.Client(project=os.environ['PROJECT_ID']).from_service_account_json(os.environ['GOOGLE_APPLICATION_CREDENTIALS'])
+    storage_client = storage.Client(project=PROJECT_ID).from_service_account_json(GOOGLE_APPLICATION_CREDENTIALS)
 
     date = datetime.datetime.now().strftime('%Y-%m-%d')
 
@@ -58,6 +61,9 @@ def send_data_to_bucket(data: dict):
     blob.upload_from_string(str(data), content_type='text/plain; charset=utf-8')
     logging.info(f"Blob {blob_name} was uploaed to bucket {BUCKET}/{folder_name}/")
 
-if __name__ == '__main__':
-    data = extract_data()
+def main(message, context):
+    try:
+        data = extract_data()
+    except:
+        data = requests.get(URL).text
     send_data_to_bucket(data)
