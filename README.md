@@ -19,3 +19,30 @@ Questions:
 - What’s the average carbon footprint of daily meals?
 
 GCP credits expire on June 27 (got myself $300 credits from Google)
+
+[PT]
+Aqui na Universidade Estadual de Campinas (UNICAMP), costumamos almoçar e jantar no restaurante universitário, conhecido como Bandejão.
+
+Dado isso, quero entender o que esperar do cardápio a cada dia e se alguma refeição que eu gosto será servida ou não.
+
+Perguntas:
+
+- O quão previsível é o cardápio de hoje com base nos dias anteriores?
+
+- Com que frequência os mesmos pratos se repetem ao longo dos dias?
+
+- Com que frequência temos Feijoada?
+
+- Com que frequência temos frango?
+
+- As refeições são mais leves nas segundas-feiras e mais pesadas nas sextas?
+
+- Dias quentes ou chuvosos influenciam em refeições mais leves?
+
+- Quais pratos costumam aparecer juntos?
+
+- Quais molhos aparecem com mais frequência?
+
+- Qual é a média da pegada de carbono das refeições diárias?
+
+Meus créditos no Google Cloud Platform (GCP) expiram no dia 27 de junho (consegui $300 de crédito gratuito do Google).
