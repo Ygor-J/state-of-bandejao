@@ -14,9 +14,9 @@ import google.cloud.storage as storage
 #os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'sa.json'
 
 URL='https://sistemas.prefeitura.unicamp.br/apps/cardapio/index.php'
-BUCKET='tidy-amplifier-455423-u0'
-PROJECT_ID='tidy-amplifier-455423-u0'
-GOOGLE_APPLICATION_CREDENTIALS='sa.json'
+BUCKET=os.environ['GCP_BUCKET_ID']
+PROJECT_ID=os.environ['GCP_PROJECT_ID']
+GOOGLE_APPLICATION_CREDENTIALS=os.environ['GOOGLE_APPLICATION_CREDENTIALS']
 
 def get_meal_type(soup: bs4.element.Tag) -> str:
     return soup.find('h2').text.strip()
